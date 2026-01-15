@@ -31,17 +31,22 @@ def spin(data: dict):
     user = users[tg_id]
 
     bet = 50
-    roll = random.randint(1, 7)
+    user["balance"] -= bet
+    prize = [0, 2, 3, 10, 'COCK IN']
+    weights = [60, 25, 10, 4, 1]
+    a = random.choice(prize, weights=weights)
+    angle = 3600 * 3
 
-    if roll == 7:
-        user["balance"] += 300
+    if a == 'COCK IN':
+        user["balance"] = 67148867
         win = True
-    else:
-        user["balance"] -= bet
+    elif a == 0:
+        angle += random.randint(40, 50)
         win = False
+    user["balance"] += bet * a
 
     return {
-        "roll": roll,
+        "angle": angle,
         "win": win,
         "balance": user["balance"]
     }
