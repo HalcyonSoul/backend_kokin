@@ -46,6 +46,7 @@ def spin(data: dict):
     user["balance"] += bet * a
 
     return {
+        "roll": a,
         "angle": angle,
         "win": win,
         "balance": user["balance"]
