@@ -39,13 +39,14 @@ def spin(data: dict):
     if a == 'COCK IN':
         user["balance"] = 67148867
         win = True
-    elif a == 0:
+    elif int(a) == 0:
         angle += random.randint(40, 50)
         win = False
-    user["balance"] += bet * a
+    else:
+        user["balance"] += bet * int(a)
 
     return {
-        "roll": a,
+        "roll": int(a),
         "angle": angle,
         "win": win,
         "balance": user["balance"]
