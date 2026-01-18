@@ -34,7 +34,7 @@ def spin(data: dict):
     user["balance"] -= bet
 
     prize = [0, 2, 3, 10, 'COCK IN']
-    a = random.choices(prize, weights=(6000, 2500, 100, 40, 1))[0]
+    a = random.choices(prize, weights=(10000, 3000, 1000, 100, 1))[0]
 
     angle = random.randint(360 * 5, 360 * 10)
 
