@@ -33,20 +33,20 @@ def spin(data: dict):
     bet = 50
     user["balance"] -= bet
     prize = [0, 2, 3, 10, 'COCK IN']
-    a = random.choices(prize, weights=(60, 25, 10, 4, 1))
-    angle = 3600 * 3
+    a = random.choices(prize, weights=(60, 25, 10, 4, 1))[0]
+    angle = random.randint(360 * 5, 360 * 10)
 
     if a[0] == 'COCK IN':
-        user["balance"] = 67148867
+        user["balance"] += bet * 1000
         win = True
     elif a[0] == 0:
-        angle += random.randint(40, 50)
         win = False
     else:
         user["balance"] += bet * a[0]
+        win = True
 
     return {
-        "roll": a[0],
+        "roll": a,
         "angle": angle,
         "win": win,
         "balance": user["balance"]
