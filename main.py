@@ -1,5 +1,6 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi import HTTPException
 import random
 
 app = FastAPI()
@@ -12,15 +13,51 @@ app.add_middleware(
 )
 
 users = {}
+ADMINS = {
+    5016415554,
+}
+
+@app.post("/admin/add_balance")
+def add_balance(data: dict):
+    admin_id = int(data.get("admin_id"))
+    tg_id = str(data.get("tg_id"))
+    amount = int(data.get("amount"))
+
+    if admin_id not in ADMINS:
+        raise HTTPException(status_code=403, detail="Not admin")
+    
+    if tg_id not in users:
+        users[tg_id] = {"balance": 1000}
+
+    users[tg_id]["balance"] += amount
+
+    return {
+        "tg_id": tg_id,
+        "balance": users[tg_id]['balance']
+    }
+
+@app.post("/admin/users")
+def get_users(data: dict):
+    admin_id = int(data.get("admin_id"))
+
+    if admin_id not in ADMINS:
+        raise HTTPException(status_code=403, detail="Not admin")
+    
+    return {
+        "users": users,
+    }
 
 @app.post("/login")
 def login(data: dict):
     print("Received login data:", data)
     tg_id = str(data["tg_id"])
+    tg_name = str(data["tg_name"])
+    tg_username = str(data["tg_useranme"])
 
 
     if tg_id not in users:
-        users[tg_id] = {"balance": 1000}
+        users[tg_id] = {"balance": 1000, "name": tg_name, "username": tg_username}
+
 
     return users[tg_id]
 
