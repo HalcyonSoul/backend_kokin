@@ -142,7 +142,54 @@ async def add_balance(message: Message):
     if r.status_code == 200:
         await message.answer("✅ Баланс обновлён")
     else:
-        await message.answer("❌ Ошибка")
+        await message.answer(f"❌ Ошибка {r.status_code}")
+
+@dp.message(Command("balance"))
+async def get_balance(message: Message):
+    if message.from_user.id not in ADMINS:
+        return
+    
+    try:
+        tg_id = message.text.split()[1]
+    except:
+        await message.answer("Использование:\n/balance <tg_id>")
+        return
+    
+    r = requests.post(
+        f"{BASE_URL}/login",
+        json={"tg_id": tg_id}
+    )
+
+    if r.status_code == 200:
+        data = r.json()
+        await message.answer(
+            f"💰 Баланс пользователя\n"
+            f"ID: {tg_id}\n"
+            f"Баланс: {data['balance']}"
+        )
+    else:
+        await message.answer(f"❌ Ошибка {r.status_code}")
+
+@dp.message(Command("users"))
+async def get_users(message: Message):
+    if message.from_user.id not in ADMINS:
+        return
+    
+    r = requests.post(
+        f"{BASE_URL}/admin/users",
+        json={
+            "admin_id": message.from_user.id
+        }
+    )
+
+    if r.status_code == 200:
+        data = r.json()
+        await message(
+            f"📃 Список пользователей\n"
+            f"{data}"
+        )
+    else:
+        await message.answer(f"❌ Ошибка {r.status_code}")
 
 async def start_fastapi():
     config = uvicorn.Config(
