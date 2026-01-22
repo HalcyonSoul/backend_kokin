@@ -67,6 +67,28 @@ def spin_logic(tg_id: str):
         "balance": user["balance"],
     }
 
+def format_users(users: dict) -> str:
+    if not users:
+        return "👥 Пользователей пока нет"
+
+    text = "👥 <b>Список пользователей</b>\n\n"
+
+    for i, (tg_id, user) in enumerate(users.items(), start=1):
+        text += (
+            f"<b>{i}.</b> "
+            f"ID: <code>{tg_id}</code>\n"
+            f"💰 Баланс: <b>{user['balance']}</b>\n"
+        )
+
+        if user.get("name"):
+            text += f"👤 Имя: {user['name']}\n"
+        if user.get("username"):
+            text += f"🔗 @{user['username']}\n"
+
+        text += "\n"
+
+    return text
+
 # FastAPI
 
 app = FastAPI()
@@ -135,7 +157,13 @@ async def add_cmd(message: Message):
 async def users_cmd(message: Message):
     if message.from_user.id not in ADMINS:
         return
-    await message.answer(f"👥 Пользователи:\n{users}")
+
+    text = format_users(users)
+
+    await message.answer(
+        text,
+        parse_mode="HTML"
+    )
 
 # START
 
