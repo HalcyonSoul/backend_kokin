@@ -95,7 +95,9 @@ def spin(data: dict):
         "balance": user["balance"],
     }
 
-BOT_TOKEN = "TOKEN"
+
+
+BOT_TOKEN = "7713278203:AAGqLZQMDZ0he8_hZ4fq_4BpYDBmXGXWN38"
 BASE_URL = "http://127.0.0.1:8000"
 
 bot = Bot(token=BOT_TOKEN)
