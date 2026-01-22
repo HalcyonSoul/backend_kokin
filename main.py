@@ -1,7 +1,15 @@
-from fastapi import FastAPI
-from fastapi.middleware.cors import CORSMiddleware
-from fastapi import HTTPException
+import asyncio
 import random
+
+from fastapi import FastAPI, HTTPException
+from fastapi.middleware.cors import CORSMiddleware
+
+from aiogram import Bot, Dispatcher
+from aiogram.filters import Command
+from aiogram.types import Message
+
+import uvicorn
+import requests
 
 app = FastAPI()
 
@@ -13,9 +21,8 @@ app.add_middleware(
 )
 
 users = {}
-ADMINS = {
-    5016415554,
-}
+ADMINS = {5016415554}
+
 
 @app.post("/admin/add_balance")
 def add_balance(data: dict):
@@ -25,16 +32,14 @@ def add_balance(data: dict):
 
     if admin_id not in ADMINS:
         raise HTTPException(status_code=403, detail="Not admin")
-    
+
     if tg_id not in users:
         users[tg_id] = {"balance": 1000}
 
     users[tg_id]["balance"] += amount
 
-    return {
-        "tg_id": tg_id,
-        "balance": users[tg_id]['balance']
-    }
+    return {"tg_id": tg_id, "balance": users[tg_id]["balance"]}
+
 
 @app.post("/admin/users")
 def get_users(data: dict):
@@ -42,22 +47,22 @@ def get_users(data: dict):
 
     if admin_id not in ADMINS:
         raise HTTPException(status_code=403, detail="Not admin")
-    
-    return {
-        "users": users,
-    }
+
+    return {"users": users}
+
 
 @app.post("/login")
 def login(data: dict):
-    print("Received login data:", data)
     tg_id = str(data["tg_id"])
-    tg_name = str(data["tg_name"])
-    tg_username = str(data["tg_useranme"])
-
+    tg_name = str(data.get("tg_name", ""))
+    tg_username = str(data.get("tg_username", ""))
 
     if tg_id not in users:
-        users[tg_id] = {"balance": 1000, "name": tg_name, "username": tg_username}
-
+        users[tg_id] = {
+            "balance": 1000,
+            "name": tg_name,
+            "username": tg_username,
+        }
 
     return users[tg_id]
 
@@ -70,12 +75,11 @@ def spin(data: dict):
     bet = 50
     user["balance"] -= bet
 
-    prize = [0, 2, 3, 10, 'COCK IN']
+    prize = [0, 2, 3, 10, "COCK IN"]
     a = random.choices(prize, weights=(10000, 3000, 1000, 100, 1))[0]
-
     angle = random.randint(360 * 5, 360 * 10)
 
-    if a == 'COCK IN':
+    if a == "COCK IN":
         user["balance"] += bet * 1000
         win = True
     elif a == 0:
@@ -88,7 +92,78 @@ def spin(data: dict):
         "roll": a,
         "angle": angle,
         "win": win,
-        "balance": user["balance"]
+        "balance": user["balance"],
     }
 
-# uvicorn main:app --reload
+BOT_TOKEN = "TOKEN"
+BASE_URL = "http://127.0.0.1:8000"
+
+bot = Bot(token=BOT_TOKEN)
+dp = Dispatcher()
+
+
+@dp.message(Command("admin"))
+async def admin(message: Message):
+    if message.from_user.id not in ADMINS:
+        await message.answer("❌ Доступ запрещён")
+        return
+
+    await message.answer(
+        "⚙️ Админ-панель\n"
+        "/add <tg_id> <amount>\n"
+        "/balance <tg_id>\n"
+        "/users"
+    )
+
+
+@dp.message(Command("add"))
+async def add_balance(message: Message):
+    if message.from_user.id not in ADMINS:
+        return
+
+    try:
+        tg_id, amount = message.text.split()[1:]
+        amount = int(amount)
+    except:
+        await message.answer("Использование:\n/add <tg_id> <amount>")
+        return
+
+    r = requests.post(
+        f"{BASE_URL}/admin/add_balance",
+        json={
+            "admin_id": message.from_user.id,
+            "tg_id": tg_id,
+            "amount": amount,
+        },
+    )
+
+    if r.status_code == 200:
+        await message.answer("✅ Баланс обновлён")
+    else:
+        await message.answer("❌ Ошибка")
+
+async def start_fastapi():
+    config = uvicorn.Config(
+        app,
+        host="0.0.0.0",
+        port=8000,
+        log_level="info",
+        loop="asyncio",
+    )
+    server = uvicorn.Server(config)
+    await server.serve()
+
+
+async def start_bot():
+    await dp.start_polling(bot)
+
+
+async def main():
+    await asyncio.gather(
+        start_fastapi(),
+        start_bot(),
+    )
+
+
+if __name__ == "__main__":
+    asyncio.run(main())
