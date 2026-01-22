@@ -98,7 +98,7 @@ def spin(data: dict):
 
 
 BOT_TOKEN = "7713278203:AAGqLZQMDZ0he8_hZ4fq_4BpYDBmXGXWN38"
-BASE_URL = "http://127.0.0.1:8000"
+BASE_URL = "backendkokin-production.up.railway.app"
 
 bot = Bot(token=BOT_TOKEN)
 dp = Dispatcher()
