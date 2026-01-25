@@ -49,7 +49,7 @@ def spin_logic(tg_id: str):
     user["balance"] -= bet
 
     prize = [0, 2, 3, 10, "COCK IN"]
-    roll = random.choices(prize, weights=(10000, 3000, 1000, 100, 1))[0]
+    roll = random.choices(prize, weights=(1000, 400, 200, 50, 1))[0]
     angle = random.randint(360 * 5, 360 * 10)
 
     win = False
