@@ -15,6 +15,7 @@ BOT_TOKEN = os.getenv("BOT_TOKEN")  # Railway ENV
 ADMINS = {5016415554}
 
 PORT = int(os.getenv("PORT", 8000))
+SECTORS = ["COCK IN", 0, 67, 2, 0, 3, 2, 0, 10, 3, 0, 2];
 
 # BODY
 
@@ -50,7 +51,7 @@ def spin_logic(tg_id: str):
 
     prize = [0, 2, 3, 10, "COCK IN"]
     roll = random.choices(prize, weights=(1000, 400, 200, 50, 1))[0]
-    angle = random.randint(360 * 5, 360 * 10)
+    roll_index = random.choice([i for i, v in enumerate(SECTORS) if v == roll])
 
     win = False
     if roll == "COCK IN":
@@ -62,7 +63,7 @@ def spin_logic(tg_id: str):
 
     return {
         "roll": roll,
-        "angle": angle,
+        "index": roll_index,
         "win": win,
         "balance": user["balance"],
     }
