@@ -196,7 +196,7 @@ def format_top_users(rows):
         if username:
             display_name += f" (@{username})"
 
-        text += f"{medal} {display_name} — 💰 <b>{balance}</b>\n"
+        text += f"{medal} https://t.me/@id{tg_id} — 💰 <b>{balance}</b>\n"
 
     return text
 
