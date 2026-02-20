@@ -159,6 +159,48 @@ async def get_all_users():
                 "username": row[3],
             }
         return result
+    
+async def get_top_users(limit: int = 10):
+    async with aiosqlite.connect(DB_PATH) as db:
+        cursor = await db.execute("""
+            SELECT tg_id, balance
+            FROM users
+            ORDER BY balance DESC
+            LIMIT ?
+        """, (limit,))
+        rows = await cursor.fetchall()
+
+        return rows
+
+def format_top_users(rows):
+    if not rows:
+        return "🏆 Пользователей пока нет"
+
+    text = "🏆 <b>ТОП 10 игроков</b>\n\n"
+
+    medals = ["🥇", "🥈", "🥉"]
+
+    for i, (tg_id, balance) in enumerate(rows, start=1):
+        medal = medals[i-1] if i <= 3 else f"{i}."
+        text += f"{medal} <code>{tg_id}</code> — 💰 <b>{balance}</b>\n"
+
+    return text
+
+async def auto_report():
+    await asyncio.sleep(10)
+
+    while True:
+        try:
+            users = await get_all_users()
+            text = format_users(users)
+
+            for admin_id in ADMINS:
+                await bot.send_message(admin_id, text, parse_mode="HTML")
+
+        except Exception as e:
+            print("Ошибка автоотчета:", e)
+
+        await asyncio.sleep(600)
 
 
 # ===== GAME LOGIC =====
@@ -262,6 +304,12 @@ async def start(message: Message):
                    message.from_user.username or "")
     await message.answer("🎰 Добро пожаловать!")
 
+@dp.message(Command("top"))
+async def top_cmd(message: Message):
+    rows = await get_top_users(10)
+    text = format_top_users(rows)
+    await message.answer(text, parse_mode="HTML")
+
 @dp.message(Command("add"))
 async def add_cmd(message: Message):
     if message.from_user.id not in ADMINS:
@@ -300,7 +348,8 @@ async def main():
 
     api_task = asyncio.create_task(start_api())
     bot_task = asyncio.create_task(start_bot())
-    await asyncio.gather(api_task, bot_task)
+    report_task = asyncio.create_task(auto_report())
+    await asyncio.gather(api_task, bot_task, report_task)
 
 if __name__ == "__main__":
     asyncio.run(main())
