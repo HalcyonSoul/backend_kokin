@@ -19,7 +19,7 @@ PORT = int(os.getenv("PORT", 8000))
 SECTORS = ["COCK IN", 0, 67, 2, 0, 2, 3, 0, 3, 10, 0, 2]
 
 DB_PATH = "users.db"
-MIGRATE = True   # ⚠️ После первого запуска поставить False
+MIGRATE = False   # ⚠️ После первого запуска поставить False
 
 # ===== ТВОИ ТЕКУЩИЕ ПОЛЬЗОВАТЕЛИ =====
 CURRENT_USERS = {
