@@ -115,17 +115,29 @@ async def migrate_users():
 
 async def get_user(tg_id: str, name="", username=""):
     async with aiosqlite.connect(DB_PATH) as db:
-        cursor = await db.execute("SELECT tg_id, balance, name, username FROM users WHERE tg_id = ?", (tg_id,))
+        cursor = await db.execute(
+            "SELECT tg_id, balance, name, username FROM users WHERE tg_id = ?",
+            (tg_id,)
+        )
         user = await cursor.fetchone()
 
         if user:
+            # Обновляем имя и username если изменились
+            if name != user[2] or username != user[3]:
+                await db.execute(
+                    "UPDATE users SET name = ?, username = ? WHERE tg_id = ?",
+                    (name, username, tg_id)
+                )
+                await db.commit()
+
             return {
                 "tg_id": user[0],
                 "balance": user[1],
-                "name": user[2],
-                "username": user[3],
+                "name": name,
+                "username": username,
             }
 
+        # Если пользователя нет — создаём
         await db.execute(
             "INSERT INTO users (tg_id, balance, name, username) VALUES (?, ?, ?, ?)",
             (tg_id, 1000, name, username),
@@ -163,26 +175,28 @@ async def get_all_users():
 async def get_top_users(limit: int = 10):
     async with aiosqlite.connect(DB_PATH) as db:
         cursor = await db.execute("""
-            SELECT tg_id, balance
+            SELECT tg_id, balance, name, username
             FROM users
             ORDER BY balance DESC
             LIMIT ?
         """, (limit,))
-        rows = await cursor.fetchall()
-
-        return rows
+        return await cursor.fetchall()
 
 def format_top_users(rows):
     if not rows:
         return "🏆 Пользователей пока нет"
 
     text = "🏆 <b>ТОП 10 игроков</b>\n\n"
-
     medals = ["🥇", "🥈", "🥉"]
 
-    for i, (tg_id, balance) in enumerate(rows, start=1):
+    for i, (tg_id, balance, name, username) in enumerate(rows, start=1):
         medal = medals[i-1] if i <= 3 else f"{i}."
-        text += f"{medal} <code>{tg_id}</code> — 💰 <b>{balance}</b>\n"
+
+        display_name = name if name else tg_id
+        if username:
+            display_name += f" (@{username})"
+
+        text += f"{medal} {display_name} — 💰 <b>{balance}</b>\n"
 
     return text
 
@@ -279,7 +293,11 @@ app.add_middleware(
 
 @app.post("/login")
 async def login(data: dict):
-    return await get_user(str(data["tg_id"]), data.get("tg_name", ""), data.get("tg_username", ""))
+    return await get_user(
+        str(data["tg_id"]),
+        data.get("tg_name", ""),
+        data.get("tg_username", "")
+    )
 
 @app.post("/spin")
 async def spin(data: dict):
