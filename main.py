@@ -215,8 +215,15 @@ def format_users(users: dict) -> str:
     for i, (tg_id, user) in enumerate(users.items(), start=1):
         text += (
             f"<b>{i}.</b> ID: <code>{tg_id}</code>\n"
-            f"💰 Баланс: <b>{user['balance']}</b>\n\n"
+            f"💰 Баланс: <b>{user['balance']}</b>\n"
         )
+
+        if user.get("name"):
+            text += f"👤 Имя: {user['name']}\n"
+        if user.get("username"):
+            text += f"🔗 @{user['username']}\n"
+
+        text += "\n"
 
     return text
 
